@@ -1031,7 +1031,19 @@ class MyStrategy(bt.Strategy):
 
 ### Strategy - Timer Support
 
-#### `add_timer()` - Schedule Callbacks
+Timers let you schedule callbacks at specific **times of day** rather than reacting
+to every bar. They are ideal for time-based trading logic: rebalancing at market
+open, closing positions before session end, taking snapshots at fixed intervals,
+or implementing Cheat-On-Open patterns.
+
+#### Why Timers Exist
+
+Without timers, the only hook is `next()` which fires on every bar. If you want
+logic at "10:30 AM every Tuesday," you'd have to manually check the datetime inside
+`next()`. Timers encapsulate that scheduling, including weekday/monthday filtering,
+session-relative scheduling, and repeating intervals — all handled automatically.
+
+#### `add_timer()` — Schedule a Callback
 
 ```python
 def add_timer(self, when,
@@ -1041,47 +1053,379 @@ def add_timer(self, when,
               allow=None,
               tzdata=None, cheat=False,
               *args, **kwargs):
-    """
-    Schedule a timer to call notify_timer.
-    
-    Parameters:
-      when: datetime.time, SESSION_START, or SESSION_END
-      offset: timedelta offset from 'when'
-      repeat: timedelta for repeating within session
-      weekdays: list of iso weekdays (1=Mon, 7=Sun)
-      weekcarry: execute next day if weekday missed
-      monthdays: list of days of month
-      monthcarry: execute next day if monthday missed
-      allow: callback(date) -> bool for custom filtering
-      tzdata: timezone (pytz instance or data feed)
-      cheat: call before broker evaluates orders
-    """
-    return self.cerebro._add_timer(
-        owner=self, when=when, ...
-    )
+```
 
+**Parameters explained:**
+
+| Parameter    | Type              | Purpose                                                     |
+|-------------|-------------------|-------------------------------------------------------------|
+| `when`      | `time`, `SESSION_START`, `SESSION_END` | Target time. Can be a clock time or session-relative constant |
+| `offset`    | `timedelta`       | Shift `when` by this amount (e.g., 15 min after open)      |
+| `repeat`    | `timedelta`       | Fire again every `repeat` interval until session ends       |
+| `weekdays`  | `list[int]`       | ISO weekdays to fire on (1=Mon ... 7=Sun). Empty = all     |
+| `weekcarry` | `bool`            | If missed weekday, fire on the next trading day             |
+| `monthdays` | `list[int]`       | Days of month to fire on. Empty = all                       |
+| `monthcarry`| `bool`            | If missed monthday (weekend/holiday), fire next trading day |
+| `allow`     | `callable(date)`  | Custom filter: return `True` to allow, `False` to skip      |
+| `tzdata`    | pytz / data feed  | Timezone for interpreting `when`                            |
+| `cheat`     | `bool`            | If `True`, fire **before** broker processes orders          |
+| `*args, **kwargs` |             | Passed through to `notify_timer`                            |
+
+**Returns:** a `Timer` object (can be used to identify which timer fired)
+
+#### `notify_timer()` — The Callback
+
+```python
 def notify_timer(self, timer, when, *args, **kwargs):
-    """Called when timer fires."""
-    pass
+    '''Called when a timer fires.
+    
+    Args:
+        timer: the Timer object (has timer.p.tid, timer.p.cheat, etc.)
+        when:  the scheduled datetime (may differ from actual system time)
+        *args, **kwargs: whatever was passed to add_timer
+    '''
+    pass  # override in your strategy
+```
 
-# Example:
-class TimerExample(bt.Strategy):
+#### How Timers Work Internally — Call Flow
+
+```
+Strategy.__init__():
+    self.add_timer(when=SESSION_START, weekdays=[1])
+        │
+        └── cerebro._add_timer(owner=self, when=SESSION_START, weekdays=[1])
+            │
+            ├── timer = Timer(tid=0, owner=self, when=SESSION_START, ...)
+            └── cerebro._pretimers.append(timer)
+
+Cerebro.run():
+    │
+    ├── Split timers by cheat flag:
+    │   for timer in self._pretimers:
+    │       timer.start(self.datas[0])          # resolve SESSION_START → actual time
+    │       if timer.p.cheat:
+    │           self._timerscheat.append(timer)  # fire BEFORE broker
+    │       else:
+    │           self._timers.append(timer)        # fire AFTER broker
+    │
+    └── Each bar in _runnext / _runonce:
+        │
+        ├── ① _check_timers(runstrats, dt0, cheat=True)
+        │       # Fires cheat timers BEFORE broker.next()
+        │       # → strategy can place orders that execute on THIS bar's open
+        │
+        ├── ② self._brokernotify()
+        │       # Broker processes orders, delivers notifications
+        │
+        ├── ③ _check_timers(runstrats, dt0, cheat=False)
+        │       # Fires normal timers AFTER broker
+        │       # → strategy sees updated positions, then strategy.next() runs
+        │
+        └── ④ strat._next()  (or _oncepost)
+
+_check_timers(runstrats, dt0, cheat):
+    timers = self._timerscheat if cheat else self._timers
+    for t in timers:
+        if not t.check(dt0):           # time/day/week/month filters
+            continue
+        t.params.owner.notify_timer(t, t.lastwhen, *t.args, **t.kwargs)
+        if t.params.strats:            # cerebro-level timer → all strategies
+            for strat in runstrats:
+                strat.notify_timer(t, t.lastwhen, *t.args, **t.kwargs)
+```
+
+#### Timer.check() — The Filtering Logic
+
+```python
+def check(self, dt):
+    d = num2date(dt)
+    ddate = d.date()
+
+    # Already called today and not repeating? → skip
+    if self._lastcall == ddate:
+        return False
+
+    # New session? → reset the scheduled "when" time
+    if d > self._nexteos:
+        nexteos = data._getnexteos()      # end of session from data feed
+        self._nexteos = nexteos
+        self._reset_when()
+
+    # Day change → apply filters
+    if ddate > self._curdate:
+        self._curdate = ddate
+        if not self._check_month(ddate):  # monthdays filter
+            self._reset_when(ddate)
+            return False
+        if not self._check_week(ddate):   # weekdays filter
+            self._reset_when(ddate)
+            return False
+        if self.p.allow and not self.p.allow(ddate):  # custom filter
+            self._reset_when(ddate)
+            return False
+
+    # Check if current time >= scheduled time
+    dwhen = datetime.combine(ddate, self._when) + self.p.offset
+    dtwhen = date2num(dwhen)
+
+    if dt < dtwhen:
+        return False                      # not yet time
+
+    # Timer fires!
+    self.lastwhen = dwhen
+
+    if self.p.repeat:
+        # Schedule next repeat (within this session)
+        while dwhen + self.p.repeat <= self._nexteos:
+            dwhen += self.p.repeat
+            if dwhen > d:                 # found next future time
+                self._dtwhen = date2num(dwhen)
+                break
+        else:
+            self._reset_when(ddate)       # no more repeats today
+
+    else:
+        self._reset_when(ddate)           # one-shot, done for today
+
+    return True
+```
+
+#### Example 1: Rebalance at Market Open Every Monday
+
+```python
+class WeeklyRebalance(bt.Strategy):
     def __init__(self):
-        # Rebalance at market open every Monday
+        self.sma = bt.ind.SMA(period=20)
+        self.add_timer(
+            when=bt.timer.SESSION_START,   # at market open
+            weekdays=[1],                   # Monday only (ISO: 1=Mon)
+        )
+
+    def notify_timer(self, timer, when, *args, **kwargs):
+        # This fires once every Monday at session start
+        if self.data.close[0] > self.sma[0] and not self.position:
+            self.buy(size=100)
+        elif self.data.close[0] < self.sma[0] and self.position:
+            self.close()
+
+    def next(self):
+        pass  # all logic is in the timer callback
+```
+
+#### Example 2: Close Positions 15 Minutes Before Session End
+
+```python
+class CloseBeforeEnd(bt.Strategy):
+    def __init__(self):
+        self.add_timer(
+            when=bt.timer.SESSION_END,         # session end time
+            offset=datetime.timedelta(minutes=-15),  # 15 min BEFORE
+        )
+        # If session ends at 16:00, timer fires at 15:45
+
+    def notify_timer(self, timer, when, *args, **kwargs):
+        if self.position:
+            self.close()
+            print(f'{when}: Closing all positions before session end')
+```
+
+#### Example 3: Cheat-On-Open — Place Orders at Current Bar's Open Price
+
+The `cheat=True` flag makes the timer fire **before** the broker evaluates orders.
+Combined with Cerebro's `cheat_on_open` or `broker.set_coo(True)`, this allows
+buying at the current bar's open price instead of waiting for the next bar.
+
+```python
+class CheatOnOpen(bt.Strategy):
+    def __init__(self):
+        self.sma = bt.ind.SMA(period=10)
+        self.order = None
+        # Cheat timer fires BEFORE broker.next()
         self.add_timer(
             when=bt.timer.SESSION_START,
-            weekdays=[1],  # Monday
+            cheat=True,                     # ← fire before broker
         )
-        
-        # Check at 3pm every day
-        self.add_timer(
-            when=datetime.time(15, 0),
-        )
-    
+
     def notify_timer(self, timer, when, *args, **kwargs):
-        print(f"Timer fired at {when}")
-        self.rebalance()
+        # This runs before broker processes orders for this bar
+        if timer.p.cheat:
+            if self.order is None and self.data.close[-1] > self.sma[-1]:
+                self.order = self.buy()
+                # With coo=True, this executes at THIS bar's open
+                print(f'{when}: Cheat buy at open={self.data.open[0]}')
+
+    def notify_order(self, order):
+        if order.status == order.Completed:
+            print(f'  Filled at {order.executed.price}')
+            self.order = None
+
+# Must enable cheat-on-open in broker:
+cerebro.broker.set_coo(True)
 ```
+
+Execution timeline for a single bar:
+
+```
+Bar N arrives: open=50.20, high=51, low=49.8, close=50.50
+    │
+    ├── ① _check_timers(cheat=True)
+    │       → notify_timer fires (cheat=True)
+    │       → self.buy() creates a Market order
+    │
+    ├── ② broker.next()
+    │       → processes the Market order
+    │       → coo=True: executes at open[0] = 50.20 on THIS bar
+    │       → order.status = Completed
+    │
+    ├── ③ _check_timers(cheat=False)
+    │       → (no normal timers in this example)
+    │
+    └── ④ strategy.next()
+            → position is already updated
+```
+
+#### Example 4: Repeating Timer — Check Every 30 Minutes
+
+```python
+class IntraDayMonitor(bt.Strategy):
+    def __init__(self):
+        self.add_timer(
+            when=datetime.time(9, 30),              # first fire at 9:30
+            repeat=datetime.timedelta(minutes=30),   # then every 30 min
+            # Fires at: 9:30, 10:00, 10:30, 11:00, ..., until session end
+        )
+
+    def notify_timer(self, timer, when, *args, **kwargs):
+        print(f'[{when}] Price={self.data.close[0]:.2f}, '
+              f'Position={self.position.size}')
+
+        # Check drawdown every 30 minutes
+        if self.broker.getvalue() < self.broker.startingcash * 0.95:
+            self.close()
+            print(f'  EMERGENCY EXIT: drawdown exceeded 5%')
+```
+
+#### Example 5: Monthly Rebalance on the 1st Trading Day
+
+```python
+class MonthlyRebalance(bt.Strategy):
+    params = (
+        ('target_pct', 0.60),  # 60% stocks
+    )
+
+    def __init__(self):
+        self.add_timer(
+            when=bt.timer.SESSION_START,
+            monthdays=[1],          # 1st of each month
+            monthcarry=True,        # if 1st is weekend → fire on next trading day
+        )
+
+    def notify_timer(self, timer, when, *args, **kwargs):
+        # Rebalance to target percentage
+        target_value = self.broker.getvalue() * self.p.target_pct
+        current_value = self.position.size * self.data.close[0]
+        diff = target_value - current_value
+        shares = int(diff / self.data.close[0])
+
+        if shares > 0:
+            self.buy(size=shares)
+            print(f'{when.date()}: Rebalance BUY {shares} shares')
+        elif shares < 0:
+            self.sell(size=abs(shares))
+            print(f'{when.date()}: Rebalance SELL {abs(shares)} shares')
+```
+
+`monthcarry=True` means: if the 1st falls on a Saturday, the timer fires on
+Monday the 3rd (the next trading day). The skipped days are consumed from the
+internal mask so they don't fire again.
+
+#### Example 6: Custom Allow Filter — Skip Holidays
+
+```python
+HOLIDAYS = {
+    datetime.date(2024, 12, 25),  # Christmas
+    datetime.date(2024, 1, 1),    # New Year
+    datetime.date(2024, 7, 4),    # Independence Day
+}
+
+class HolidayAware(bt.Strategy):
+    def __init__(self):
+        self.add_timer(
+            when=bt.timer.SESSION_START,
+            allow=lambda d: d not in HOLIDAYS,  # skip holidays
+        )
+
+    def notify_timer(self, timer, when, *args, **kwargs):
+        print(f'{when}: Trading day (not a holiday)')
+```
+
+#### Example 7: Multiple Timers with Identification
+
+```python
+class MultiTimer(bt.Strategy):
+    def __init__(self):
+        # Timer 0: Opening bell
+        self.open_timer = self.add_timer(
+            when=bt.timer.SESSION_START,
+        )
+        # Timer 1: Mid-day check
+        self.mid_timer = self.add_timer(
+            when=datetime.time(12, 0),
+        )
+        # Timer 2: Closing preparation
+        self.close_timer = self.add_timer(
+            when=bt.timer.SESSION_END,
+            offset=datetime.timedelta(minutes=-30),
+        )
+
+    def notify_timer(self, timer, when, *args, **kwargs):
+        # Identify which timer fired using the Timer object
+        if timer is self.open_timer:
+            print(f'{when}: Session opened — scanning for entries')
+            self._check_entries()
+        elif timer is self.mid_timer:
+            print(f'{when}: Mid-day — checking stops')
+            self._adjust_stops()
+        elif timer is self.close_timer:
+            print(f'{when}: 30 min to close — flatten positions')
+            self.close()
+
+        # Alternative: use timer.p.tid (auto-assigned integer 0, 1, 2, ...)
+        # if timer.p.tid == 0: ...
+```
+
+#### Example 8: Passing Custom Data to Timer Callback
+
+```python
+class DataPassthrough(bt.Strategy):
+    def __init__(self):
+        # Extra args and kwargs are passed to notify_timer
+        self.add_timer(
+            when=datetime.time(10, 0),
+            'my_label',                     # positional arg
+            threshold=0.02,                  # keyword arg
+        )
+
+    def notify_timer(self, timer, when, *args, **kwargs):
+        label = args[0]                     # 'my_label'
+        threshold = kwargs['threshold']      # 0.02
+        print(f'[{label}] Checking if move > {threshold:.0%}')
+```
+
+#### Summary: Timer Execution Order Within a Bar
+
+```
+Bar arrives
+    │
+    ├── ① Cheat timers     (cheat=True)    ← orders can hit THIS bar's open
+    ├── ② Broker.next()                     ← order matching happens here
+    ├── ③ Normal timers     (cheat=False)   ← see updated positions
+    └── ④ Strategy.next()                   ← regular per-bar logic
+```
+
+The `cheat` flag is the key distinction: cheat timers fire **before** the broker,
+letting you place orders that execute on the current bar. Normal timers fire
+**after** the broker but **before** `next()`, so you see the latest fills.
 
 ---
 

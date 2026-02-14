@@ -1,0 +1,98 @@
+{
+  "metadata": {
+    "timestamp": "2026-02-13T17:39:49.419604",
+    "python_version": "3.13.11 | packaged by Anaconda, Inc. | (main, Dec 10 2025, 21:28:48) [GCC 14.3.0]",
+    "backtrader_version": "1.9.78.123",
+    "variant": "standard"
+  },
+  "results": [
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 1000,
+      "num_indicators": 5,
+      "execution_time_ms": 399.77812900178833,
+      "peak_memory_mb": 0.6359224319458008,
+      "current_memory_mb": 0.6359224319458008,
+      "bars_per_second": 2501.38746333351,
+      "timestamp": "2026-02-13T17:39:39.275404"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 1000,
+      "num_indicators": 5,
+      "execution_time_ms": 350.3733550023753,
+      "peak_memory_mb": 0.5186767578125,
+      "current_memory_mb": 0.5186767578125,
+      "bars_per_second": 2854.0983089117053,
+      "timestamp": "2026-02-13T17:39:39.690569"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 10000,
+      "num_indicators": 5,
+      "execution_time_ms": 3997.691701995791,
+      "peak_memory_mb": 3.0712337493896484,
+      "current_memory_mb": 3.0712337493896484,
+      "bars_per_second": 2501.443519270794,
+      "timestamp": "2026-02-13T17:39:41.608575"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 10000,
+      "num_indicators": 5,
+      "execution_time_ms": 3071.8809320023865,
+      "peak_memory_mb": 2.347468376159668,
+      "current_memory_mb": 2.347468376159668,
+      "bars_per_second": 3255.3345072139764,
+      "timestamp": "2026-02-13T17:39:44.753590"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "columnar",
+      "data_size": 1000,
+      "num_indicators": 5,
+      "execution_time_ms": 231.84251000202494,
+      "peak_memory_mb": 1.2690420150756836,
+      "current_memory_mb": 1.2690420150756836,
+      "bars_per_second": 4313.272833318039,
+      "timestamp": "2026-02-13T17:39:45.056321"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "columnar",
+      "data_size": 1000,
+      "num_indicators": 5,
+      "execution_time_ms": 211.65290499629918,
+      "peak_memory_mb": 0.9548921585083008,
+      "current_memory_mb": 0.9548921585083008,
+      "bars_per_second": 4724.7166298874345,
+      "timestamp": "2026-02-13T17:39:45.341812"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "columnar",
+      "data_size": 10000,
+      "num_indicators": 5,
+      "execution_time_ms": 1917.0312699934584,
+      "peak_memory_mb": 1.9221916198730469,
+      "current_memory_mb": 1.9221916198730469,
+      "bars_per_second": 5216.3990001238335,
+      "timestamp": "2026-02-13T17:39:47.332868"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "columnar",
+      "data_size": 10000,
+      "num_indicators": 5,
+      "execution_time_ms": 1982.8497029957362,
+      "peak_memory_mb": 1.6096878051757812,
+      "current_memory_mb": 1.6096878051757812,
+      "bars_per_second": 5043.246588428646,
+      "timestamp": "2026-02-13T17:39:49.418645"
+    }
+  ]
+}

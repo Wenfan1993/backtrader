@@ -1,0 +1,240 @@
+{
+  "metadata": {
+    "timestamp": "2026-02-13T17:24:54.980116",
+    "python_version": "3.11.14 (main, Oct 21 2025, 18:31:21) [GCC 11.2.0]",
+    "backtrader_version": "1.9.78.123"
+  },
+  "results": [
+    {
+      "name": "MinimalStrategy",
+      "variant": "standard",
+      "data_size": 1000,
+      "num_indicators": 0,
+      "execution_time_ms": 286.55974000139395,
+      "peak_memory_mb": 0.4636573791503906,
+      "current_memory_mb": 0.45832347869873047,
+      "bars_per_second": 3489.673741311796,
+      "timestamp": "2026-02-13T17:12:16.245891"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 1000,
+      "num_indicators": 1,
+      "execution_time_ms": 302.9385439949692,
+      "peak_memory_mb": 0.49033546447753906,
+      "current_memory_mb": 0.48923397064208984,
+      "bars_per_second": 3300.9995585659335,
+      "timestamp": "2026-02-13T17:12:17.340954"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 1000,
+      "num_indicators": 1,
+      "execution_time_ms": 280.3548539959593,
+      "peak_memory_mb": 0.45586395263671875,
+      "current_memory_mb": 0.45461082458496094,
+      "bars_per_second": 3566.908101453499,
+      "timestamp": "2026-02-13T17:12:18.344107"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 1000,
+      "num_indicators": 5,
+      "execution_time_ms": 365.2355849990272,
+      "peak_memory_mb": 0.6241025924682617,
+      "current_memory_mb": 0.6216030120849609,
+      "bars_per_second": 2737.9588437492025,
+      "timestamp": "2026-02-13T17:12:19.612860"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 1000,
+      "num_indicators": 5,
+      "execution_time_ms": 321.6741650030599,
+      "peak_memory_mb": 0.5203151702880859,
+      "current_memory_mb": 0.5200586318969727,
+      "bars_per_second": 3108.735822755575,
+      "timestamp": "2026-02-13T17:12:20.805765"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 1000,
+      "num_indicators": 10,
+      "execution_time_ms": 374.15093400340993,
+      "peak_memory_mb": 0.6158914566040039,
+      "current_memory_mb": 0.6158914566040039,
+      "bars_per_second": 2672.7181709798597,
+      "timestamp": "2026-02-13T17:12:22.113297"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 1000,
+      "num_indicators": 10,
+      "execution_time_ms": 419.8745699977735,
+      "peak_memory_mb": 1.1548166275024414,
+      "current_memory_mb": 1.1482524871826172,
+      "bars_per_second": 2381.6636478015394,
+      "timestamp": "2026-02-13T17:12:23.605488"
+    },
+    {
+      "name": "MinimalStrategy",
+      "variant": "standard",
+      "data_size": 10000,
+      "num_indicators": 0,
+      "execution_time_ms": 2608.1089330036775,
+      "peak_memory_mb": 1.8720808029174805,
+      "current_memory_mb": 1.8720808029174805,
+      "bars_per_second": 3834.195678507689,
+      "timestamp": "2026-02-13T17:12:30.063351"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 10000,
+      "num_indicators": 1,
+      "execution_time_ms": 2606.101358993328,
+      "peak_memory_mb": 2.108870506286621,
+      "current_memory_mb": 2.1071033477783203,
+      "bars_per_second": 3837.149297931662,
+      "timestamp": "2026-02-13T17:12:38.025606"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 10000,
+      "num_indicators": 1,
+      "execution_time_ms": 2698.0141029998777,
+      "peak_memory_mb": 1.8697404861450195,
+      "current_memory_mb": 1.8678407669067383,
+      "bars_per_second": 3706.429847375951,
+      "timestamp": "2026-02-13T17:12:46.366463"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 10000,
+      "num_indicators": 5,
+      "execution_time_ms": 3442.912152997451,
+      "peak_memory_mb": 3.065959930419922,
+      "current_memory_mb": 3.065959930419922,
+      "bars_per_second": 2904.517906823109,
+      "timestamp": "2026-02-13T17:12:56.870402"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 10000,
+      "num_indicators": 5,
+      "execution_time_ms": 2836.4235589979216,
+      "peak_memory_mb": 2.3470773696899414,
+      "current_memory_mb": 2.3470773696899414,
+      "bars_per_second": 3525.566542513451,
+      "timestamp": "2026-02-13T17:13:03.457072"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 10000,
+      "num_indicators": 10,
+      "execution_time_ms": 3379.5384429977275,
+      "peak_memory_mb": 3.0659255981445312,
+      "current_memory_mb": 3.0655288696289062,
+      "bars_per_second": 2958.9839466746153,
+      "timestamp": "2026-02-13T17:13:13.875905"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 10000,
+      "num_indicators": 10,
+      "execution_time_ms": 4138.637530995766,
+      "peak_memory_mb": 7.321802139282227,
+      "current_memory_mb": 7.320878982543945,
+      "bars_per_second": 2416.2541235144063,
+      "timestamp": "2026-02-13T17:13:26.633793"
+    },
+    {
+      "name": "MinimalStrategy",
+      "variant": "standard",
+      "data_size": 100000,
+      "num_indicators": 0,
+      "execution_time_ms": 37929.16945100296,
+      "peak_memory_mb": 16.206578254699707,
+      "current_memory_mb": 16.205613136291504,
+      "bars_per_second": 2636.4932701513635,
+      "timestamp": "2026-02-13T17:15:15.066026"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 100000,
+      "num_indicators": 1,
+      "execution_time_ms": 30340.08912799618,
+      "peak_memory_mb": 18.54722309112549,
+      "current_memory_mb": 18.54722309112549,
+      "bars_per_second": 3295.969223364128,
+      "timestamp": "2026-02-13T17:16:42.613911"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 100000,
+      "num_indicators": 1,
+      "execution_time_ms": 27600.07169799792,
+      "peak_memory_mb": 16.20369052886963,
+      "current_memory_mb": 16.202425003051758,
+      "bars_per_second": 3623.1789936710165,
+      "timestamp": "2026-02-13T17:17:59.925063"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 100000,
+      "num_indicators": 5,
+      "execution_time_ms": 41096.060707001016,
+      "peak_memory_mb": 27.92626953125,
+      "current_memory_mb": 27.92601490020752,
+      "bars_per_second": 2433.3232499572464,
+      "timestamp": "2026-02-13T17:19:52.693411"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 100000,
+      "num_indicators": 5,
+      "execution_time_ms": 29601.292505998572,
+      "peak_memory_mb": 20.891671180725098,
+      "current_memory_mb": 20.89030933380127,
+      "bars_per_second": 3378.2308654169556,
+      "timestamp": "2026-02-13T17:21:15.526492"
+    },
+    {
+      "name": "SMAStrategy",
+      "variant": "standard",
+      "data_size": 100000,
+      "num_indicators": 10,
+      "execution_time_ms": 38080.50703499612,
+      "peak_memory_mb": 27.926278114318848,
+      "current_memory_mb": 27.92537212371826,
+      "bars_per_second": 2626.0154547863467,
+      "timestamp": "2026-02-13T17:23:02.635601"
+    },
+    {
+      "name": "ComplexStrategy",
+      "variant": "standard",
+      "data_size": 100000,
+      "num_indicators": 10,
+      "execution_time_ms": 40309.728410997195,
+      "peak_memory_mb": 70.07386589050293,
+      "current_memory_mb": 70.07125663757324,
+      "bars_per_second": 2480.7907158391636,
+      "timestamp": "2026-02-13T17:24:54.979464"
+    }
+  ]
+}
